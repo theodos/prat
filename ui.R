@@ -53,10 +53,10 @@ ui <-
                                   hr(),
                                   h3("Position of Signle Mutations"),
                                   DT::dataTableOutput("snps"),
-                                  h3("Pivot table of Signle Mutations for fwd primer type"),
-                                  pivottablerOutput("fwd"),
-                                  h3("Position of Signle Mutations"),
-                                  DT::dataTableOutput("fwd2")),
+                                  h3("Detailed Signle Mutations for fwd primer type"),
+                                  DT::dataTableOutput("pivot_fwd"),
+                                  h3("Detailed Signle Mutations for rev primer type"),
+                                  DT::dataTableOutput("pivot_rev")),
                          tabPanel("Graphs")
                          )
              ),

@@ -21,9 +21,42 @@ function(input, output, session) {
   data_diagram <- reactive({
     data_pc() %>% filter(`Total Mutation in Primer Region` == 1) %>% 
       select(Diagram,`Primer Type`, `Accession ID`) %>% 
-      separate(col = "Diagram", into=c("Query","pos", "Variant"), sep = "\\s")
+      separate(col = "Diagram", into=c("Query","pos", "Variant"), sep = "\\s") %>%
+      mutate(`Mutation index` = str_locate(pos, pattern = "X")[,1]) %>%
+      mutate(`Query Nucleotide` = str_sub(Query,start = `Mutation index`, end = `Mutation index`)) %>%
+      mutate(`Variant nucleotide` = str_sub(Variant,start = `Mutation index`, end = `Mutation index`)) %>%
+      select("Query","Variant","Accession ID", "Primer Type", "Mutation index", "Query Nucleotide", "Variant nucleotide")
       
   })
+  
+  data_pivot_fwd <- reactive({
+    data_diagram() %>% select("Primer Type", "Mutation index", "Query Nucleotide", "Variant nucleotide") %>%
+      filter(`Primer Type` == "fwd") -> fwd
+    pt <- PivotTable$new()
+    pt$addData(fwd)
+    pt$addColumnDataGroups("Variant nucleotide")
+    pt$addRowDataGroups("Mutation index")
+    pt$addRowDataGroups("Query Nucleotide", addTotal = FALSE)
+    pt$defineCalculation(calculationName="TotalSNPs", summariseExpression="n()")
+    pt$evaluatePivot()
+    pt$asDataFrame(rowGroupsAsColumns = TRUE) -> data_with_nas
+    data_with_nas %>% replace(is.na(.), 0) #replace all NAs with "0"
+  })
+  
+  data_pivot_rev <- reactive({
+    data_diagram() %>% select("Primer Type", "Mutation index", "Query Nucleotide", "Variant nucleotide") %>%
+      filter(`Primer Type` == "rev") -> rev
+    pt <- PivotTable$new()
+    pt$addData(rev)
+    pt$addColumnDataGroups("Variant nucleotide")
+    pt$addRowDataGroups("Mutation index")
+    pt$addRowDataGroups("Query Nucleotide", addTotal = FALSE)
+    pt$defineCalculation(calculationName="TotalSNPs", summariseExpression="n()")
+    pt$evaluatePivot()
+    pt$asDataFrame(rowGroupsAsColumns = TRUE) -> data_with_nas
+    data_with_nas %>% replace(is.na(.), 0) #replace all NAs with "0"
+  })
+  
   output$primer_datatable <- DT::renderDataTable({
     data_pc()
   }, filter='top')
@@ -34,43 +67,27 @@ function(input, output, session) {
   }, filter='top')
     
   output$snps <- DT::renderDataTable({
-    data_diagram() %>% mutate(`Mutation index` = str_locate(pos, pattern = "X")[,1]) %>%
-      mutate(`Query Nucleotide` = str_sub(Query,start = `Mutation index`, end = `Mutation index`)) %>%
-      mutate(`Variant nucleotide` = str_sub(Variant,start = `Mutation index`, end = `Mutation index`)) %>%
-      select("Query","Variant","Accession ID", "Primer Type", "Mutation index", "Query Nucleotide", "Variant nucleotide")
+    data_diagram()
   })
   #gisaid %>% group_by(`Primer Type`,`Total Mutation in Primer Region`) %>% count()
   
-  output$fwd <- renderPivottabler({
-    data_diagram() %>% mutate(`Mutation index` = str_locate(pos, pattern = "X")[,1]) %>%
-      mutate(`Query Nucleotide` = str_sub(Query,start = `Mutation index`, end = `Mutation index`)) %>%
-      mutate(`Variant nucleotide` = str_sub(Variant,start = `Mutation index`, end = `Mutation index`)) %>%
-      select("Primer Type", "Mutation index", "Query Nucleotide", "Variant nucleotide") %>%
-      filter(`Primer Type` == "fwd") -> fwd
-    pt <- PivotTable$new()
-    pt$addData(fwd)
-    pt$addColumnDataGroups("Variant nucleotide")
-    pt$addRowDataGroups("Mutation index")
-    pt$addRowDataGroups("Query Nucleotide", addTotal = FALSE)
-    pt$defineCalculation(calculationName="TotalSNPs", summariseExpression="n()")
-    pt$evaluatePivot()
-    pivottabler(pt)
-  })
+  # output$fwd <- renderPivottabler({
+  #   data_diagram() %>% select("Primer Type", "Mutation index", "Query Nucleotide", "Variant nucleotide") %>%
+  #     filter(`Primer Type` == "fwd") -> fwd
+  #   pt <- PivotTable$new()
+  #   pt$addData(fwd)
+  #   pt$addColumnDataGroups("Variant nucleotide")
+  #   pt$addRowDataGroups("Mutation index")
+  #   pt$addRowDataGroups("Query Nucleotide", addTotal = FALSE)
+  #   pt$defineCalculation(calculationName="TotalSNPs", summariseExpression="n()")
+  #   pt$evaluatePivot()
+  #   pivottabler(pt)
+  # })
+  # 
+  output$pivot_fwd <- DT::renderDataTable(
+    data_pivot_fwd(), rownames = FALSE)
   
-  output$fwd2 <- DT::renderDataTable({
-    data_diagram() %>% mutate(`Mutation index` = str_locate(pos, pattern = "X")[,1]) %>%
-      mutate(`Query Nucleotide` = str_sub(Query,start = `Mutation index`, end = `Mutation index`)) %>%
-      mutate(`Variant nucleotide` = str_sub(Variant,start = `Mutation index`, end = `Mutation index`)) %>%
-      select("Primer Type", "Mutation index", "Query Nucleotide", "Variant nucleotide") %>%
-      filter(`Primer Type` == "fwd") -> fwd
-    pt <- PivotTable$new()
-    pt$addData(fwd)
-    pt$addColumnDataGroups("Variant nucleotide")
-    pt$addRowDataGroups("Mutation index")
-    pt$addRowDataGroups("Query Nucleotide", addTotal = FALSE)
-    pt$defineCalculation(calculationName="TotalSNPs", summariseExpression="n()")
-    pt$evaluatePivot()
-    pt$asDataFrame(rowGroupsAsColumns = TRUE)
-  })
-}
+  output$pivot_rev <- DT::renderDataTable(
+    data_pivot_rev(), rownames = FALSE)
 
+}

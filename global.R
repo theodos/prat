@@ -11,6 +11,9 @@ library(dplyr)
 library(tidyr)
 library(stringr)
 library(pivottabler)
+library(ggplot2)
+library(ggrepel)
+library(colourpicker)
 
 themeelector <- function() {
   div(
