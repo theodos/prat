@@ -48,7 +48,7 @@ ui <-
     tabPanel("Results",
              titlePanel("Results of the Analysis"),
              tabsetPanel(type = "tabs",
-                         tabPanel("Data", DT::dataTableOutput("primer_datatable")),
+                         tabPanel("Original Data", DT::dataTableOutput("primer_datatable")),
                          tabPanel("Statistics", DT::dataTableOutput("stats"),
                                   hr(),
                                   h3("Position of Signle Mutations"),
@@ -57,8 +57,28 @@ ui <-
                                   DT::dataTableOutput("pivot_fwd"),
                                   h3("Detailed Signle Mutations for rev primer type"),
                                   DT::dataTableOutput("pivot_rev")),
-                         tabPanel("Graphs")
-                         )
+                         tabPanel("Graph for fwd primer",
+                                  sidebarLayout(sidebarPanel("Graph parameters",
+                                                             textInput("fwdmtitle", label = h3("Main graph title"), value = "Forward primer mutations (%)")
+                                                             
+                                                             ),
+                                                mainPanel("Graphs",
+                                                          plotOutput("fwd_graph")
+                                                          )
+                                                ) # sidebarLaytout end
+                                  ), # tabPanel end
+                         tabPanel("Graph for rev primer",
+                                  sidebarLayout(sidebarPanel("Graph parameters",
+                                                             textInput("revmtitle", label = h3("Main graph title"), value = "Reverse primer mutations (%)")
+                                                             
+                                                            ),
+                                                mainPanel("Graphs",
+                                                          plotOutput("rev_graph")
+                                                         )
+                                                ) # sidebarLaytout end
+                                 ) # tabPanel end
+                         ), #tabsetPanel end
+             
              ),
     
     tabPanel("Help",
