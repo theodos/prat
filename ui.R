@@ -1,9 +1,10 @@
 # Define UI for application that draws a histogram
 ui <-
-  navbarPage(
-    title = "Primer Checker Analysis Tool",
+  navbarPage( div(column(width = 8, tags$p("Primer Checker Analysis")), 
+                  column(width = 4, tags$img(src = "logo.png", height = 30))),
+   #title = "Primer Checker Analysis Tool",
     windowTitle = "Welcome to version 1.0 of Primer Checker Analysis Tool",
-    theme = shinytheme("flatly"),
+    theme = shinytheme("cerulean"),
     tabPanel(
       "Home",
       
@@ -24,7 +25,7 @@ ui <-
                          buttonLabel = "Choose your file...",
                          width = '100%'),
                numericInput("no_variants", label = h3("The number of variants"),
-                            value = 500000,
+                            value = 560259,
                             width = '100%'),
                bsTooltip("no_variants", 
                          title = "Input the total number of COVID-19 variants Primer Checker tool used",
@@ -58,21 +59,47 @@ ui <-
                                   h3("Detailed Signle Mutations for rev primer type"),
                                   DT::dataTableOutput("pivot_rev")),
                          tabPanel("Graph for fwd primer",
-                                  sidebarLayout(sidebarPanel("Graph parameters",
-                                                             textInput("fwdmtitle", label = h3("Main graph title"), value = "Forward primer mutations (%)")
+                                  sidebarLayout(sidebarPanel(h3("Graph parameters"),
+                                                             hr(),
+                                                             h4("Labels for Title and Axis"),
+                                                             textInput("fwdmtitle", label = h5("Main graph title"), value = "Forward primer mutations (%)"),
+                                                             textInput("fwdxlabel", label = h5("X axis label"), value = "Primer sequence"),
+                                                             textInput("fwdylabel", label = h5("Y axis label"), value = "Percent"),
+                                                             hr(),
+                                                             h4("Colours for A, T, C, G"),
+                                                             colourInput("fwdacol", "Select colour for Adenine (A)", "lightgreen"),
+                                                             colourInput("fwdtcol", "Select colour for Thymine (T)", "darkorange1"),
+                                                             colourInput("fwdccol", "Select colour for Cytosine (C)", "grey"),
+                                                             colourInput("fwdgcol", "Select colour for Guanine (G)", "skyblue"),
+                                                             hr(),
+                                                             h4("Cut-off Percent value"),
+                                                             numericInput("fwdcutoff", label = h4("Display only percent labels above value:"), value = 4)
                                                              
                                                              ),
-                                                mainPanel("Graphs",
+                                                mainPanel(h3("Graphs"),
                                                           plotOutput("fwd_graph")
                                                           )
                                                 ) # sidebarLaytout end
                                   ), # tabPanel end
                          tabPanel("Graph for rev primer",
-                                  sidebarLayout(sidebarPanel("Graph parameters",
-                                                             textInput("revmtitle", label = h3("Main graph title"), value = "Reverse primer mutations (%)")
+                                  sidebarLayout(sidebarPanel(h3("Graph parameters"),
+                                                             hr(),
+                                                             h4("Labels for Title and Axis"),
+                                                             textInput("revmtitle", label = h5("Main graph title"), value = "Reverse primer mutations (%)"),
+                                                             textInput("revxlabel", label = h5("X axis label"), value = "Primer sequence"),
+                                                             textInput("revylabel", label = h5("Y axis label"), value = "Percent"),
+                                                             hr(),
+                                                             h4("Colours for A, T, C, G"),
+                                                             colourInput("revacol", "Select colour for Adenine (A)", "lightgreen"),
+                                                             colourInput("revtcol", "Select colour for Thymine (T)", "darkorange1"),
+                                                             colourInput("revccol", "Select colour for Cytosine (C)", "grey"),
+                                                             colourInput("revgcol", "Select colour for Guanine (G)", "skyblue"),
+                                                             hr(),
+                                                             h4("Cut-off Percent value"),
+                                                             numericInput("revcutoff", label = h4("Display only percent labels above value:"), value = 4)
                                                              
                                                             ),
-                                                mainPanel("Graphs",
+                                                mainPanel(h3("Graphs"),
                                                           plotOutput("rev_graph")
                                                          )
                                                 ) # sidebarLaytout end

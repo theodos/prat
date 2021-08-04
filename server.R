@@ -63,7 +63,7 @@ function(input, output, session) {
   
   output$stats <- DT::renderDataTable({
     data_pc() %>% group_by(`Primer Type`,`Total Mutation in Primer Region`) %>% 
-      count(name="Count") %>% mutate(`Percent of Total in %`=Count/input$no_variants)
+      count(name="Count") %>% mutate(`Percent of Total in %`=round(x = Count/input$no_variants*100, digits = 7))
   }, filter='top')
     
   output$snps <- DT::renderDataTable({
@@ -110,15 +110,18 @@ function(input, output, session) {
     
     merged_seq_ordered %>% pivot_longer(where(is.numeric), names_to = "hit", values_to = "count") -> forbar_percent_long
     
+    ceiling(max(forbar_percent_long$count)) -> maxy
+    
     ggplot(data=forbar_percent_long, aes(x=`Mutation index`, fill=hit, y = count)) +
       geom_bar(stat="identity") +
       # geom_text(aes(label = ifelse(count>4, count, "")), vjust =1.5) +
       scale_x_discrete(limits = forbar_percent_ordered[,1], labels = forbar_percent_ordered[,2]) +
       ggtitle(input$fwdmtitle) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.title = element_blank()) +
-      geom_label_repel(aes(label = ifelse(count>4, paste(round(count,2), "%", sep=""), "")), max.overlaps = Inf, box.padding = 1.5, show.legend = FALSE) +
-      scale_fill_manual(values = c("A" = "lightgreen", "T" = "darkorange1", "G" = "grey", "C" = "skyblue")) +
-      annotate("text", x = 0, y = -3.5, label = "5'") + coord_cartesian(ylim = c(0, 50),  clip = "off") + annotate("text", x = 30, y = -3.5, label = "3'")
+      geom_label_repel(aes(label = ifelse(count>input$fwdcutoff, paste(round(count,2), "%", sep=""), "")), max.overlaps = Inf, box.padding = 1.5, show.legend = FALSE) +
+      scale_fill_manual(values = c("A" = input$fwdacol, "T" = input$fwdtcol, "G" = input$fwdgcol, "C" = input$fwdccol)) +
+      annotate("text", x = 0, y = -3.5, label = "5'") + coord_cartesian(ylim = c(0, maxy),  clip = "off") + annotate("text", x = 30, y = -3.5, label = "3'") +
+      xlab(input$fwdxlabel) + ylab(input$fwdylabel)
     
   })
   
@@ -142,15 +145,18 @@ function(input, output, session) {
     
     merged_seq_ordered %>% pivot_longer(where(is.numeric), names_to = "hit", values_to = "count") -> forbar_percent_long
     
+    ceiling(max(forbar_percent_long$count)) -> maxy
+    
     ggplot(data=forbar_percent_long, aes(x=`Mutation index`, fill=hit, y = count)) +
       geom_bar(stat="identity") +
       # geom_text(aes(label = ifelse(count>4, count, "")), vjust =1.5) +
       scale_x_discrete(limits = forbar_percent_ordered[,1], labels = forbar_percent_ordered[,2]) +
       ggtitle(input$revmtitle) +
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.title = element_blank()) +
-      geom_label_repel(aes(label = ifelse(count>4, paste(round(count,2), "%", sep=""), "")), max.overlaps = Inf, box.padding = 1.5, show.legend = FALSE) +
-      scale_fill_manual(values = c("A" = "lightgreen", "T" = "darkorange1", "G" = "grey", "C" = "skyblue")) +
-      annotate("text", x = 0, y = -3.5, label = "5'") + coord_cartesian(ylim = c(0, 50),  clip = "off") + annotate("text", x = 30, y = -3.5, label = "3'")
+      geom_label_repel(aes(label = ifelse(count>input$revcutoff, paste(round(count,2), "%", sep=""), "")), max.overlaps = Inf, box.padding = 1.5, show.legend = FALSE) +
+      scale_fill_manual(values = c("A" = input$revacol, "T" = input$revtcol, "G" = input$revgcol, "C" = input$revccol)) +
+      annotate("text", x = 0, y = -3.5, label = "5'") + coord_cartesian(ylim = c(0, maxy),  clip = "off") + annotate("text", x = 30, y = -3.5, label = "3'") +
+      xlab(input$revxlabel) + ylab(input$revylabel)
     
   })
 
