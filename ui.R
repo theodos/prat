@@ -78,6 +78,7 @@ ui <-
                                                              ),
                                                 mainPanel(h3("Graphs"),
                                                           plotOutput("fwd_graph")
+                                                          
                                                           )
                                                 ) # sidebarLaytout end
                                   ), # tabPanel end
