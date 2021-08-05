@@ -14,6 +14,8 @@ library(pivottabler)
 library(ggplot2)
 library(ggrepel)
 library(colourpicker)
+library(periscope)
+library(shinybusy)
 
 themeelector <- function() {
   div(

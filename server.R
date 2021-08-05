@@ -30,6 +30,7 @@ function(input, output, session) {
   })
   
   data_pivot_fwd <- reactive({
+    show_modal_spinner()
     data_diagram() %>% select("Primer Type", "Mutation index", "Query Nucleotide", "Variant nucleotide") %>%
       filter(`Primer Type` == "fwd") -> fwd
     pt <- PivotTable$new()
@@ -54,12 +55,13 @@ function(input, output, session) {
     pt$defineCalculation(calculationName="TotalSNPs", summariseExpression="n()")
     pt$evaluatePivot()
     pt$asDataFrame(rowGroupsAsColumns = TRUE) -> data_with_nas
+    remove_modal_spinner()
     data_with_nas %>% replace(is.na(.), 0) #replace all NAs with "0"
   })
   
   output$primer_datatable <- DT::renderDataTable({
-    data_pc()
-  }, filter='top')
+    DT::datatable(data_pc(),  filter='top') %>% formatStyle(columns = "Diagram", `font-family` = "Courier New") 
+  })
   
   output$stats <- DT::renderDataTable({
     data_pc() %>% group_by(`Primer Type`,`Total Mutation in Primer Region`) %>% 
@@ -120,7 +122,7 @@ function(input, output, session) {
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.title = element_blank()) +
       geom_label_repel(aes(label = ifelse(count>input$fwdcutoff, paste(round(count,2), "%", sep=""), "")), max.overlaps = Inf, box.padding = 1.5, show.legend = FALSE) +
       scale_fill_manual(values = c("A" = input$fwdacol, "T" = input$fwdtcol, "G" = input$fwdgcol, "C" = input$fwdccol)) +
-      annotate("text", x = 0, y = -3.5, label = "5'") + coord_cartesian(ylim = c(0, maxy),  clip = "off") + annotate("text", x = 30, y = -3.5, label = "3'") +
+      annotate("text", x = 0, y = -3.5, label = "5'") + coord_cartesian(ylim = c(0, maxy),  clip = "off") + annotate("text", x = query_seq_length + 1, y = -3.5, label = "3'") +
       xlab(input$fwdxlabel) + ylab(input$fwdylabel)
     
   })
@@ -155,7 +157,7 @@ function(input, output, session) {
       theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), legend.title = element_blank()) +
       geom_label_repel(aes(label = ifelse(count>input$revcutoff, paste(round(count,2), "%", sep=""), "")), max.overlaps = Inf, box.padding = 1.5, show.legend = FALSE) +
       scale_fill_manual(values = c("A" = input$revacol, "T" = input$revtcol, "G" = input$revgcol, "C" = input$revccol)) +
-      annotate("text", x = 0, y = -3.5, label = "5'") + coord_cartesian(ylim = c(0, maxy),  clip = "off") + annotate("text", x = 30, y = -3.5, label = "3'") +
+      annotate("text", x = 0, y = -1.5, label = "5'") + coord_cartesian(ylim = c(0, maxy),  clip = "off") + annotate("text", x = query_seq_length + 1, y = -1.5, label = "3'") +
       xlab(input$revxlabel) + ylab(input$revylabel)
     
   })
