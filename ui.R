@@ -73,7 +73,13 @@ ui <-
                                                              colourInput("fwdgcol", "Select colour for Guanine (G)", "skyblue", allowTransparent = TRUE),
                                                              hr(),
                                                              h4("Cut-off Percent value"),
-                                                             numericInput("fwdcutoff", label = h4("Display only percent labels above value:"), value = 4)
+                                                             numericInput("fwdcutoff", label = h4("Display only percent labels above value:"), value = 4),
+                                                             h4("Download plot"),
+                                                             selectInput("fwdfile_type", label =  "File Type",
+                                                                         choices = c("pdf", "png", "jpeg", "tiff")),
+                                                             downloadButton("fwddownloadPlot", label = "Download plot")
+                                                               
+                                                             
                                                              
                                                              ),
                                                 mainPanel(h3("Graphs"),
@@ -98,7 +104,10 @@ ui <-
                                                              hr(),
                                                              h4("Cut-off Percent value"),
                                                              numericInput("revcutoff", label = h4("Display only percent labels above value:"), value = 4),
-                                                             
+                                                             h4("Download plot"),
+                                                             selectInput("revfile_type", label =  "File Type",
+                                                                         choices = c("pdf", "png", "jpeg", "tiff")),
+                                                             downloadButton("revdownloadPlot", label = "Download plot")
                                                              
                                                             ),
                                                 mainPanel(h3("Graphs"),
