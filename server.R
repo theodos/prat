@@ -2,11 +2,23 @@
 # Define server logic required to draw a histogram
 function(input, output, session) {
   
+  hideTab("navbar",target = "Results", session = session)
+  
+  observeEvent(input$example_btn, {
+    
+    updateNumericInput(session, "no_variants", value = 560259)
+    updateDateRangeInput(session = session, inputId = "date_range", start = "2021-01-01", end = "2021-07-01")
+  })
+  
+
   
   data_pc <- reactive({
     req(input$primer_file)
+    showTab("navbar", target = "Results", select = FALSE, session = session)
     
     ext <- tools::file_ext(input$primer_file$name)
+    validate(need(ext == "csv", message = "Please upload a csv file"))
+    
     switch(ext,
            csv = vroom::vroom(input$primer_file$datapath, delim = ",",
                               show_col_types = FALSE, col_select = c(!Primer)),
@@ -16,10 +28,14 @@ function(input, output, session) {
                               show_col_types = FALSE),
            validate("Invalid file; Please upload a .csv or .tsv/txt file")
     )
+    
   })
   
+  # Calculate position of single nucleotide mutations
   data_diagram <- reactive({
     data_pc() %>% filter(`Total Mutation in Primer Region` == 1) %>% 
+      filter( between(`Date Collected`,input$date_range_filters[1],input$date_range_filters[2])) %>%
+      {if (length(input$countries_filter) > 0) filter(.,Country %in% input$countries_filter) else (.)} %>%
       select(Diagram,`Primer Type`, `Accession ID`) %>% 
       separate(col = "Diagram", into=c("Query","pos", "Variant"), sep = "\\s") %>%
       mutate(`Mutation index` = str_locate(pos, pattern = "X")[,1]) %>%
@@ -57,15 +73,20 @@ function(input, output, session) {
     data_with_nas %>% replace(is.na(.), 0) #replace all NAs with "0"
   })
   
+  # Display the original data from Primer Checker csv file
   output$primer_datatable <- DT::renderDataTable({
     DT::datatable(data_pc(),  filter='top') %>% formatStyle(columns = "Diagram", `font-family` = "Courier New") 
   })
   
+  # Display general statistics (single, double, etc. mutations)`` for fwd, rev and prb
   output$stats <- DT::renderDataTable({
-    data_pc() %>% group_by(`Primer Type`,`Total Mutation in Primer Region`) %>% 
+    data_pc() %>% filter( between(`Date Collected`,input$date_range_filters[1],input$date_range_filters[2])) %>%
+      {if (length(input$countries_filter) > 0) filter(.,Country %in% input$countries_filter) else (.)} %>%
+      group_by(`Primer Type`,`Total Mutation in Primer Region`) %>% 
       count(name="Count") %>% mutate(`Percent of Total in %`=round(x = Count/input$no_variants*100, digits = 7))
   }, filter='top')
-    
+  
+  # Display position of single mutations
   output$snps <- DT::renderDataTable({
     data_diagram()
   })
@@ -96,6 +117,11 @@ function(input, output, session) {
   
   output$fwd_graph <- renderPlot({
     data_pivot_fwd() -> forbar
+    validate(
+      need(dim(forbar)[1] > 1, "No single mutations for the selected filters!")
+      )
+    
+    
     forbar[dim(forbar)[1],dim(forbar)[2]] -> total
     forbar[-nrow(forbar),-ncol(forbar)] -> forbar
     forbar %>% mutate(across(where(~ is.numeric(.x) && !is.integer(.x)), ~ round(.x / {{total}} * 100,5))) -> forbar_percent
@@ -133,6 +159,9 @@ function(input, output, session) {
   
   output$rev_graph <- renderPlot({
     data_pivot_rev() -> forbar
+    validate(
+      need(dim(forbar)[1] > 1, "No single mutations for the selected filters!")
+    )
     forbar[dim(forbar)[1],dim(forbar)[2]] -> total
     forbar[-nrow(forbar),-ncol(forbar)] -> forbar
     forbar %>% mutate(across(where(~ is.numeric(.x) && !is.integer(.x)), ~ round(.x / {{total}} * 100,5))) -> forbar_percent
@@ -253,5 +282,20 @@ function(input, output, session) {
       #device <- function(..., width, height) grDevices::png(..., width = width, height = height, res = 300, units = "in")
       ggsave(file, plot = revplotfunc(), device = input$revfile_type, units = "cm", width = 25, height = 15, dpi = 500)
     })
+  
+  # Get date range
+  observe({
+   
+    updateDateRangeInput(session, "date_range_filters",
+                         start = as.character(input$date_range[1]),
+                         end = as.character(input$date_range[2]),
+                         min = as.character(input$date_range[1]),
+                         max = as.character(input$date_range[2])
+    )
+    x <- as.data.frame(data_pc() %>% select(Country) %>% distinct())
+    
+    updateSelectizeInput(session, 'countries_filter', choices = x[,1], server = TRUE)
+    
+  })
 
 }

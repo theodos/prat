@@ -1,15 +1,16 @@
 # Define UI for application that draws a histogram
 ui <-
-  navbarPage( div(column(width = 8, tags$p("Primer Checker Analysis")), 
-                  column(width = 4, tags$img(src = "logo.png", height = 30))),
+  navbarPage( div(column(width = 5, tags$img(src = "prat_logo_header.png", height = 35, style="padding-bottom:7px;")), 
+                  column(width = 7, a(href="https://enzyquest.com", tags$img(src = "logo_enzyquest2.png", height = 35, style="padding-bottom:7px;")))),
    #title = "Primer Checker Analysis Tool",
-    windowTitle = "Welcome to version 1.0 of Primer Checker Analysis Tool",
+    windowTitle = "Welcome to version 1.0 of PRAT",
     theme = shinytheme("cerulean"),
+   id="navbar",
     tabPanel(
       "Home",
       
-      div(includeHTML("www/description.html")),
-      themeelector()
+      div(column(width=3), column(width=6, includeHTML("www/description.html")), column(width=3))
+     # themeelector()
       
     ),
     #tabPanel Start
@@ -21,16 +22,21 @@ ui <-
       fluidRow(
         column(3),
         column(6,
-               fileInput("primer_file", label = h3("Primer Checker results file"), 
-                         buttonLabel = "Choose your file...",
+               fileInput("primer_file", label = h3("Primer Checker results file (csv)"), 
+                         buttonLabel = "Choose your csv file...",
                          width = '100%'),
+               p("You can try an example by first downloading an example GISAID primer checker results csv file and then uploading it to PRAT."),
+               a(href="GISAID_Primer1_Results.csv", "Download example csv file. ", donwload=NA, target="_blank"),
+               actionLink("example_btn", "Press here to automatically define the number of variants and the date range for the example file."),
                numericInput("no_variants", label = h3("The number of variants"),
                             value = 560259,
                             width = '100%'),
                bsTooltip("no_variants", 
-                         title = "Input the total number of COVID-19 variants Primer Checker tool used",
+                         title = "Input the total number of COVID-19 variants used by Primer Checker",
                          placement = "right", options = list(container = "body")),
-               dateRangeInput("date_range", label = h3("Date Range")
+               dateRangeInput("date_range", label = h3("Date Range"),
+                              start = "2021-01-01"
+                              
                          ),
                bsTooltip("date_range", 
                          title = "The COVID-19 variants Date Range used by Primer Checker",
@@ -50,6 +56,17 @@ ui <-
              titlePanel("Results of the Analysis"),
              tabsetPanel(type = "tabs",
                          tabPanel("Original Data", DT::dataTableOutput("primer_datatable")),
+                         tabPanel("Filter parameters", div(includeHTML("www/filters.html")),
+                                  dateRangeInput("date_range_filters", label = h4("Date range:")),
+                                  bsTooltip("date_range_filters", 
+                                            title = "Input the dates your analysis will be based. The date range must be between the date range of all your data.",
+                                            placement = "right", options = list(container = "body")),
+                                  selectizeInput("countries_filter", label = h4("Countries to analyse"),
+                                              choices = NULL, multiple = TRUE, options = list(placeholder = 'Analyse all countries')),
+                                  bsTooltip("countries_filter", 
+                                            title = "Leave empty to analyse all countries in the dataset.",
+                                            placement = "right", options = list(container = "body")),
+                                  ),
                          tabPanel("Statistics", DT::dataTableOutput("stats"),
                                   hr(),
                                   h3("Position of Signle Mutations"),
@@ -74,6 +91,8 @@ ui <-
                                                              hr(),
                                                              h4("Cut-off Percent value"),
                                                              numericInput("fwdcutoff", label = h4("Display only percent labels above value:"), value = 4),
+                                                             
+                                                             hr(),
                                                              h4("Download plot"),
                                                              selectInput("fwdfile_type", label =  "File Type",
                                                                          choices = c("pdf", "png", "jpeg", "tiff")),
@@ -104,6 +123,8 @@ ui <-
                                                              hr(),
                                                              h4("Cut-off Percent value"),
                                                              numericInput("revcutoff", label = h4("Display only percent labels above value:"), value = 4),
+                                                             
+                                                             hr(),
                                                              h4("Download plot"),
                                                              selectInput("revfile_type", label =  "File Type",
                                                                          choices = c("pdf", "png", "jpeg", "tiff")),
@@ -120,7 +141,9 @@ ui <-
              ),
     
     tabPanel("Help",
-             titlePanel("Help for Proteosign ver. 2.0"))
+             titlePanel("Help for Primer Checker Analysis tool for SARS-CoV-2"),
+             div(includeHTML("www/help.html"))
+             )
     
     
   ) # navbarPage
